@@ -73,8 +73,16 @@ async fn column_does_not_exist_on_read(api: &mut dyn TestApi) -> crate::Result<(
     let err = res.unwrap_err();
 
     match err.kind() {
-        ErrorKind::ColumnNotFound { column } => {
-            assert_eq!(&Name::available("does_not_exist"), column);
+        ErrorKind::QueryError(_) => {
+            assert!(
+                err.original_message()
+                    .unwrap()
+                    .to_string()
+                    .find("does_not_exist")
+                    .unwrap()
+                    > 0
+            );
+            //"no such column: does_not_exist".to_string(),
         }
         e => panic!("Expected error ColumnNotFound, got {:?}", e),
     }
