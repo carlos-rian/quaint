@@ -73,16 +73,12 @@ async fn column_does_not_exist_on_read(api: &mut dyn TestApi) -> crate::Result<(
     let err = res.unwrap_err();
 
     match err.kind() {
-        ErrorKind::QueryError(_) => {
-            assert!(
-                err.original_message()
-                    .unwrap()
-                    .to_string()
-                    .find("does_not_exist")
-                    .unwrap()
-                    > 0
-            );
-            //"no such column: does_not_exist".to_string(),
+        ErrorKind::ColumnNotFound { column } => {
+            assert_eq!(&Name::available("does_not_exist"), column);
+        }
+        ErrorKind::QueryError(e) => {
+            // when the database is sqlite.
+            assert!(format!("{:?}", e).find("does_not_exist").unwrap() > 0);
         }
         e => panic!("Expected error ColumnNotFound, got {:?}", e),
     }
@@ -398,7 +394,8 @@ async fn unsupported_column_type(api: &mut dyn TestApi) -> crate::Result<()> {
     let err = result.unwrap_err();
     assert!(matches!(
         err.kind(),
-        ErrorKind::UnsupportedColumnType { column_type } if column_type.as_str() == "point"
+        ErrorKind::UnsupportedColumnType { column_type }
+         column_type.as_str() == "point"
     ));
 
     // Scalar list
