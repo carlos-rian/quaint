@@ -1,5 +1,7 @@
 use crate::ast::*;
 use crate::error::{Error, ErrorKind};
+use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::Engine as _;
 
 #[cfg(feature = "bigdecimal")]
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
@@ -170,7 +172,7 @@ impl<'a> From<Value<'a>> for serde_json::Value {
                 None => serde_json::Value::Null,
             }),
             Value::Text(cow) => cow.map(|cow| serde_json::Value::String(cow.into_owned())),
-            Value::Bytes(bytes) => bytes.map(|bytes| serde_json::Value::String(base64::encode(bytes))),
+            Value::Bytes(bytes) => bytes.map(|bytes| serde_json::Value::String(BASE64.encode(bytes))),
             Value::Enum(cow) => cow.map(|cow| serde_json::Value::String(cow.into_owned())),
             Value::Boolean(b) => b.map(serde_json::Value::Bool),
             Value::Char(c) => c.map(|c| {
